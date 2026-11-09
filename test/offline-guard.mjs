@@ -1,0 +1,12 @@
+import http from 'node:http';
+import https from 'node:https';
+import net from 'node:net';
+import tls from 'node:tls';
+import dns from 'node:dns';
+import { syncBuiltinESMExports } from 'node:module';
+const blocked = () => { throw new Error('Network disabled in acceptance fixture'); };
+http.request = http.get = https.request = https.get = blocked;
+net.connect = net.createConnection = tls.connect = blocked;
+dns.lookup = dns.resolve = blocked;
+globalThis.fetch = blocked;
+syncBuiltinESMExports();

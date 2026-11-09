@@ -10,7 +10,7 @@ const blockedDirs = new Set(['.git', '.hg', '.svn', 'node_modules', 'bower_compo
 function safety(name: string, directory: boolean): string | undefined {
   const n = name.toLowerCase();
   if (directory && blockedDirs.has(n)) return 'dependency, build, cache or credential directory';
-  if (/^\.contextpack-(?:tmp|backup)-/.test(n) || n === '.contextpack.json' || /^repomix\.config\./.test(n) || /^\.secretlintrc/.test(n) || n === 'context.md' || n === 'manifest.json') return 'tool configuration or export';
+  if (/^\.contextpack-(?:tmp|backup|lock)-/.test(n) || n === '.contextpack.json' || /^repomix\.config\./.test(n) || /^\.secretlintrc/.test(n) || n === 'context.md' || n === 'manifest.json') return 'tool configuration or export';
   if ((/^\.env(?:\.|$)/.test(n) && !/^\.env\.(example|sample|template)$/.test(n)) || /\.(pem|key|p12|pfx|keystore)$/.test(n) || /^(id_rsa|id_ed25519|credentials(?:\..*)?|secrets?(?:\..*)?|\.npmrc|\.netrc|\.pypirc|\.git-credentials)$/.test(n)) return 'secret-bearing filename';
 }
 function git(root: string, args: string[], input?: string) {
@@ -29,6 +29,7 @@ export async function discover(inputRoot: string, options: Rules, scanner: Scann
   const pinPatterns = (options.pin ?? []).map(p => ({ pattern: p, match: matcher([p]) }));
   const out = options.out ? path.resolve(options.out) : undefined;
   if (out && within(out, root)) throw new Error('Output must not contain or equal the repository');
+  const relativeOut = out && within(root, out) ? path.relative(root, out).split(path.sep).join('/') : undefined;
   const probe = git(root, ['rev-parse', '--is-inside-work-tree']);
   const isGit = probe.status === 0 && probe.stdout.trim() === 'true';
   let metadata: Snapshot['git'] = null;
@@ -36,7 +37,7 @@ export async function discover(inputRoot: string, options: Rules, scanner: Scann
   let inventory: Set<string> | undefined;
   if (isGit) {
     const head = git(root, ['rev-parse', '--verify', 'HEAD']);
-    const state = git(root, ['-c', 'core.fsmonitor=false', 'status', '--porcelain=v1', '-z', '--untracked-files=all']);
+    const state = git(root, ['-c', 'core.fsmonitor=false', 'status', '--porcelain=v1', '-z', '--untracked-files=all', '--', '.', ...(relativeOut ? [`:(exclude,literal)${relativeOut}`] : [])]);
     const entries = git(root, ['ls-files', '--stage', '-z', '--', '.']);
     const listed = git(root, ['ls-files', '--cached', '--others', '--exclude-standard', '-z', '--', '.']);
     if (state.status !== 0 || entries.status !== 0 || listed.status !== 0) throw new Error('Git discovery failed');
@@ -45,6 +46,8 @@ export async function discover(inputRoot: string, options: Rules, scanner: Scann
     for (const item of entries.stdout.split('\0')) if (item.startsWith('160000 ')) submodules.add(item.slice(item.indexOf('\t') + 1));
   }
   const result: Snapshot = { label: path.basename(root), git: metadata, files: [], decisions: [] };
+  // Record the designated output even before it exists, preserving repeatability.
+  if (relativeOut) result.decisions.push({ path: relativeOut, status: 'excluded', reason: 'output directory' });
   const pending: { rel: string; abs: string; ignored: boolean }[] = [];
   const reject = (rel: string, reason: string) => result.decisions.push({ path: rel, status: 'excluded', reason });
   async function walk(dir: string, base: string, parents: { base: string; rules: Ignore }[]) {
@@ -59,9 +62,9 @@ export async function discover(inputRoot: string, options: Rules, scanner: Scann
     for (const e of entries.sort((a, b) => order(a.name, b.name))) {
       const rel = base ? `${base}/${e.name}` : e.name, abs = path.join(dir, e.name);
       if (!within(root, abs)) { reject(rel, 'outside repository'); continue; }
+      if (out && within(out, abs)) continue;
       const blocked = safety(e.name, e.isDirectory());
       if (blocked) { reject(rel, blocked); continue; }
-      if (out && within(out, abs)) { reject(rel, 'output directory'); continue; }
       if (submodules.has(rel)) { reject(rel, 'submodule'); continue; }
       if (e.isSymbolicLink()) { reject(rel, 'symlink'); continue; }
       let ignored = false;
@@ -102,6 +105,7 @@ export async function discover(inputRoot: string, options: Rules, scanner: Scann
   }
   result.files.sort((a, b) => order(a.path, b.path));
   result.decisions.sort((a, b) => order(a.path, b.path));
+  if (!await checkedScan([result.label, ...result.decisions.map(d => d.path)].join('\n'), scanner)) throw new Error('Secret detected in repository path metadata; export blocked');
   for (const pin of pinPatterns) {
     const blocked = result.decisions.filter(d => d.status === 'excluded' && (pin.match(d.path) || pin.match(d.path + '/') || pin.pattern.startsWith(d.path + '/')));
     if (blocked.length) throw new Error(`Pin ${display(pin.pattern)} matched excluded paths: ${blocked.slice(0, 10).map(d => `${display(d.path)} (${d.reason})`).join(', ')}`);
