@@ -6,7 +6,7 @@
   "license": "MIT",
   "engines": { "node": ">=22.0.0" },
   "bin": { "contextpack": "dist/cli.js" },
-  "files": ["dist", "README.md", "LICENSE", "examples/contextpack.example.json"],
+  "files": ["dist", "README.md", "LICENSE", "docs/reference.md", "docs/compatibility.md", "examples/contextpack.example.json"],
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "test": "tsx --test test/*.test.ts",
