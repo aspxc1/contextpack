@@ -3,7 +3,7 @@ import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import ignore, { type Ignore } from 'ignore';
 import { checkedScan, countTokens, scan } from './security.js';
-import { assertNoLinks, hash, matcher, order, readRegular, utf8, within, display } from './util.js';
+import { assertNoLinks, canonicalPath, hash, matcher, order, readRegular, utf8, within, display } from './util.js';
 import type { Rules, Scanner, Snapshot, Decision } from './types.js';
 
 const blockedDirs = new Set(['.git', '.hg', '.svn', 'node_modules', 'bower_components', 'vendor', 'dist', 'build', 'out', 'coverage', '.next', '.nuxt', '.venv', 'venv', 'env', '__pycache__', '.cache', '.pytest_cache', '.mypy_cache', '.tox', 'target', '.aws', '.ssh', '.azure', '.gcloud', '.kube', '.gnupg', '.npm', '.yarn', '.pnpm-store', '.contextpack', 'packs']);
@@ -27,7 +27,7 @@ export async function discover(inputRoot: string, options: Rules, scanner: Scann
   catch { throw new Error('Repository path must be an existing local directory'); }
   const include = matcher(options.include ?? []), exclude = matcher(options.exclude ?? []);
   const pinPatterns = (options.pin ?? []).map(p => ({ pattern: p, match: matcher([p]) }));
-  const out = options.out ? path.resolve(options.out) : undefined;
+  const out = options.out ? await canonicalPath(options.out) : undefined;
   if (out && within(out, root)) throw new Error('Output must not contain or equal the repository');
   const relativeOut = out && within(root, out) ? path.relative(root, out).split(path.sep).join('/') : undefined;
   const probe = git(root, ['rev-parse', '--is-inside-work-tree']);

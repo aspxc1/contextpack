@@ -1,5 +1,5 @@
 import path from 'node:path';
-import { lstat } from 'node:fs/promises';
+import { lstat, realpath } from 'node:fs/promises';
 import { readRegular, utf8 } from './util.js';
 import { normalize } from './pack.js';
 import type { Rules, Options } from './types.js';
@@ -19,7 +19,7 @@ export async function loadConfiguration(root: string, cli: Rules): Promise<Optio
   let base: Rules = {}, profiles: Record<string, Rules> = {};
   if (exists) {
     let parsed: unknown;
-    try { parsed = JSON.parse(utf8(await readRegular(file, 512 * 1024, path.resolve(root)))); }
+    try { parsed = JSON.parse(utf8(await readRegular(file, 512 * 1024, await realpath(root)))); }
     catch { throw new Error('Cannot safely read configuration as plain UTF-8 JSON'); }
     if (!object(parsed)) throw new Error('Configuration must be a JSON object');
     const { profiles: rawProfiles, ...rest } = parsed;

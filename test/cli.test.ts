@@ -128,3 +128,16 @@ test('a directory masquerading as context.md never passes output ownership check
   await assert.rejects(writeOutput(out, result), /tool-owned|unrelated/i);
   assert.equal(await readFile(path.join(out, 'context.md', 'keep.txt'), 'utf8'), 'important');
 });
+
+test('Windows short paths use canonical containment for configs and nested output', { skip: process.platform !== 'win32' }, async t => {
+  const root = await fixture(t, { '.contextpack.json': '{"budget":3000}', 'a.ts': 'safe' });
+  const short = execFileSync('powershell.exe', ['-NoProfile', '-Command', '(New-Object -ComObject Scripting.FileSystemObject).GetFolder($env:CONTEXTPACK_TEST_ROOT).ShortPath'], {
+    encoding: 'utf8', env: { ...process.env, CONTEXTPACK_TEST_ROOT: root },
+  }).trim();
+  assert.equal((await loadConfiguration(short, {})).budget, 3000);
+  const out = path.join(short, 'custom', 'export');
+  const before = await createPack(short, { out });
+  await writeOutput(out, before);
+  const after = await createPack(short, { out });
+  assert.equal(after.context, before.context);
+});

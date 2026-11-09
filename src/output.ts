@@ -1,7 +1,7 @@
 import { lstat, mkdir, mkdtemp, readdir, rename, rm, writeFile } from 'node:fs/promises';
 import { randomUUID } from 'node:crypto';
 import path from 'node:path';
-import { assertNoLinks, readRegular, utf8, hash } from './util.js';
+import { assertNoLinks, canonicalPath, readRegular, utf8, hash } from './util.js';
 import { countTokens } from './security.js';
 import type { PackResult } from './types.js';
 
@@ -25,7 +25,10 @@ async function owned(out: string): Promise<boolean> {
 }
 export async function writeOutput(inputOut: string, result: PackResult): Promise<string[]> {
   const warnings: string[] = [];
-  const out = path.resolve(inputOut), parent = path.dirname(out);
+  let out: string;
+  try { out = await canonicalPath(inputOut); }
+  catch { throw new Error('Cannot safely access output directory (links are refused)'); }
+  const parent = path.dirname(out);
   if (hash(result.context) !== result.manifest.document.hash || countTokens(result.context) !== result.manifest.document.tokens || result.manifest.document.tokens > result.manifest.budget) throw new Error('Output validation failed');
   try { await assertNoLinks(out); await mkdir(parent, { recursive: true }); }
   catch { throw new Error('Cannot safely access output directory (links are refused)'); }

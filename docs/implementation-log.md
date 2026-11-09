@@ -19,3 +19,5 @@ Final independent review: no Critical findings. Fixed all findings with observed
 Clean install: npm ci --ignore-scripts --no-audit --no-fund -> 19 packages installed from lockfile. npm pack --dry-run -> valid 34-file package, no publication. Help/version and built CLI preview/pack run successfully. Final suite/build results recorded below after verification.
 
 Final local verification: npm run check and npm run build passed; npm test passed 23/23, zero failures/skips, on Windows Node24.20.0. Built pack of examples/backend with auth pin/focus succeeded: 7 files, 1228/5000 tokens. Independent review findings all fixed; none deferred.
+
+First remote CI run: Ubuntu Node22/24 passed; Windows Node22/24 exposed short-path aliases in runner temporary directories. Reproduced locally using a native Windows 8.3 alias. Canonicalized configuration containment and designated output/lock paths (including nonexistent descendants) without allowing links. Regression changed from failing to passing. Full local check/build and all 24 acceptance tests passed after the fix.

@@ -31,6 +31,24 @@ export async function assertNoLinks(target: string): Promise<void> {
   }
 }
 
+// Resolve aliases (including Windows 8.3 names) even for a destination that does
+// not exist yet. Existing link components remain forbidden.
+export async function canonicalPath(input: string): Promise<string> {
+  await assertNoLinks(input);
+  let current = path.resolve(input);
+  const suffix: string[] = [];
+  while (true) {
+    try { return path.join(await realpath(current), ...suffix); }
+    catch (e: any) {
+      if (e.code !== 'ENOENT') throw new Error('Cannot canonicalize local path');
+      const parent = path.dirname(current);
+      if (parent === current) throw new Error('Cannot canonicalize local path');
+      suffix.unshift(path.basename(current));
+      current = parent;
+    }
+  }
+}
+
 export async function readRegular(file: string, maxBytes: number, root?: string): Promise<Buffer> {
   await assertNoLinks(file);
   if (root && !within(root, await realpath(file))) throw new Error('File outside repository');
