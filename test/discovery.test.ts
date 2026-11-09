@@ -71,3 +71,21 @@ test('symlinks are never traversed and submodule contents are excluded', async t
   assert.ok(!result.files.some(f => f.path.startsWith('module/') || f.path.startsWith('link/')));
   assert.equal(result.decisions.find(d => d.path === 'module')?.reason, 'submodule');
 });
+
+test('Git subdirectory capture stays scoped and unusual names remain distinct', async t => {
+  const files: Record<string, string> = {
+    'outside.ts': 'outside',
+    'app/space ü.ts': 'inside',
+    'app/bidi\u202e.ts': 'bidi path',
+    'app/.gitignore': 'nested/*.tmp\n', 'app/nested/ignored.tmp': 'ignored',
+  };
+  if (process.platform !== 'win32') files['app/new\nline\x1b.ts'] = 'control path';
+  const root = await fixture(t, files, true);
+  await writeFile(path.join(root, 'outside.ts'), 'changed outside');
+  const result = await discover(path.join(root, 'app'), {});
+  assert.equal(result.git?.dirty, false);
+  assert.ok(result.files.some(f => f.path === 'space ü.ts'));
+  assert.ok(result.files.some(f => f.path === 'bidi\u202e.ts'));
+  assert.ok(!result.files.some(f => f.path.includes('outside') || f.path.endsWith('ignored.tmp')));
+  if (process.platform !== 'win32') assert.ok(result.files.some(f => f.path === 'new\nline\x1b.ts'));
+});

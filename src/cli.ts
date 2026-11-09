@@ -61,7 +61,7 @@ async function main() {
   }
   const options = await loadConfiguration(root, explicit);
   const result = await createPack(root, options);
-  if (command === 'pack') await writeOutput(options.out!, result);
+  if (command === 'pack') for (const warning of await writeOutput(options.out!, result)) process.stderr.write(`contextpack: ${warning}\n`);
   if (v.json) { process.stdout.write(JSON.stringify(result.manifest, null, 2) + '\n'); return; }
   process.stdout.write(`${command === 'preview' ? 'Preview' : 'Export written'}: ${result.manifest.files.filter((f: any) => f.status === 'included').length} files; ${result.manifest.document.tokens}/${options.budget} ${result.manifest.encoding} tokens\n`);
   for (const d of result.manifest.files) process.stdout.write(`${d.status}: ${display(d.path)} — ${d.reason}${d.reasons ? ` (${d.reasons.join(', ')})` : ''}\n`);

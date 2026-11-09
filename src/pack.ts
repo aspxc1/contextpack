@@ -22,7 +22,7 @@ export function normalize(input: Rules): Options {
 export async function createPack(root: string, input: Rules, scanner: Scanner = scan): Promise<PackResult> {
   const options = normalize(input);
   // Scan user-controlled text before it reaches errors, reports, or rendering.
-  if (!await checkedScan([options.task, options.instructions, ...options.focus, ...options.pin, ...options.include, ...options.exclude].join('\n'), scanner)) throw new Error('Secret detected in task, instructions or selection rules; export blocked');
+  if (!await checkedScan([options.task, options.instructions, options.profile ?? '', ...options.focus, ...options.pin, ...options.include, ...options.exclude].join('\n'), scanner)) throw new Error('Secret detected in task, instructions or selection rules; export blocked');
   const snapshot = await discover(root, options, scanner);
   // Paths and the repository label are exported too.
   if (!await checkedScan([snapshot.label, ...snapshot.decisions.map(d => d.path)].join('\n'), scanner)) throw new Error('Secret detected in repository path metadata; export blocked');

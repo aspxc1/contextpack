@@ -12,12 +12,21 @@ test('whole source survives embedded fences, with task, metadata and exact accou
   const root = await fixture(t, { 'src/auth.ts': source, 'README.md': 'A backend', 'package.json': JSON.stringify({ scripts: { test: 'node --test' }, main: 'src/auth.ts' }) });
   const result = await createPack(root, { task: 'Fix refresh behavior', pin: ['src/auth.ts'], budget: 4000 });
   assert.ok(result.context.includes(source));
+  assert.match(result.context, /\nPath:\n`{3,}json\n"src\/auth\.ts"\n`{3,}\n/);
   assert.ok(result.context.includes('Fix refresh behavior'));
   assert.match(result.context, /unverified/i);
   assert.equal(result.manifest.document.tokens, countTokens(result.context));
   assert.equal(result.manifest.document.hash, hash(result.context));
   assert.ok(result.manifest.document.tokens <= 4000);
   assert.ok(!JSON.stringify(result.manifest).includes('export const text'));
+});
+
+test('many short backtick runs cannot break framing of a valid file below the size cap', async t => {
+  const source = '`a'.repeat(140000);
+  const root = await fixture(t, { 'data.txt': source });
+  const result = await createPack(root, { pin: ['data.txt'], budget: 400000 });
+  assert.ok(result.context.includes(source));
+  assert.ok(result.manifest.document.tokens <= 400000);
 });
 
 test('focus prioritizes auth source and related tests under a tight budget', async t => {
@@ -56,7 +65,7 @@ test('unchanged captures are byte identical and secrets in task/instructions fai
   const b = await createPack(root, { task: 'help', budget: 2000 });
   assert.equal(a.context, b.context);
   const secret = 'AKIA' + 'A'.repeat(16);
-  for (const option of [{ task: secret }, { instructions: secret }]) {
+  for (const option of [{ task: secret }, { instructions: secret }, { profile: secret }]) {
     await assert.rejects(createPack(root, option), e => { assert.match(String(e), /secret/i); assert.ok(!String(e).includes(secret)); return true; });
   }
 });

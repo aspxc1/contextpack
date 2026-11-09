@@ -11,6 +11,7 @@ import { fixture, gitRun } from './helpers.js';
 
 const cliPath = path.resolve('src/cli.ts');
 const tsx = path.resolve('node_modules/tsx/dist/cli.mjs');
+const loader = pathToFileURL(path.resolve('node_modules/tsx/dist/loader.mjs')).href;
 function cli(root: string, args: string[]) {
   return spawnSync(process.execPath, [tsx, cliPath, ...args], { cwd: root, encoding: 'utf8', timeout: 30000 });
 }
@@ -99,7 +100,31 @@ test('normal capture succeeds with Node network APIs disabled and an external ex
   const root = await fixture(t, { 'a.ts': 'safe' });
   const external = await fixture(t, { 'task.txt': 'Inspect the source' });
   const guard = pathToFileURL(path.resolve('test/offline-guard.mjs')).href;
-  const result = spawnSync(process.execPath, ['--import', guard, tsx, cliPath, 'preview', root, '--task-file', path.join(external, 'task.txt'), '--json'], { encoding: 'utf8', timeout: 30000 });
+  const result = spawnSync(process.execPath, ['--import', guard, '--import', loader, cliPath, 'preview', root, '--task-file', path.join(external, 'task.txt'), '--json'], { encoding: 'utf8', timeout: 30000 });
   assert.equal(result.status, 0, result.stderr);
   assert.ok(JSON.parse(result.stdout).document.tokens > 0);
+});
+
+test('backup cleanup failure reports a successful replacement with a recoverable backup', async t => {
+  const root = await fixture(t, { 'a.ts': 'first' });
+  const out = path.join(root, 'export');
+  await writeOutput(out, await createPack(root, { out }));
+  await writeFile(path.join(root, 'a.ts'), 'second');
+  const fault = pathToFileURL(path.resolve('test/cleanup-fault.mjs')).href;
+  const result = spawnSync(process.execPath, ['--import', fault, '--import', loader, cliPath, 'pack', root, '--out', out], { encoding: 'utf8', timeout: 30000 });
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stderr, /backup.*cleanup|cleanup.*backup/i);
+  assert.ok((await readFile(path.join(out, 'context.md'), 'utf8')).includes('second'));
+  assert.ok((await readdir(root)).some(n => n.startsWith('.contextpack-backup-')));
+});
+
+test('a directory masquerading as context.md never passes output ownership checks', async t => {
+  const root = await fixture(t, { 'a.ts': 'safe' });
+  const out = path.join(root, 'export');
+  const result = await createPack(root, { out });
+  await mkdir(path.join(out, 'context.md'), { recursive: true });
+  await writeFile(path.join(out, 'context.md', 'keep.txt'), 'important');
+  await writeFile(path.join(out, 'manifest.json'), JSON.stringify(result.manifest));
+  await assert.rejects(writeOutput(out, result), /tool-owned|unrelated/i);
+  assert.equal(await readFile(path.join(out, 'context.md', 'keep.txt'), 'utf8'), 'important');
 });
