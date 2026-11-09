@@ -1,0 +1,29 @@
+{
+  "name": "@aspxc1/contextpack",
+  "version": "1.0.0",
+  "description": "Offline, task-focused repository context attachments with exact budgets and omission reports",
+  "type": "module",
+  "license": "MIT",
+  "engines": { "node": ">=22.0.0" },
+  "bin": { "contextpack": "dist/cli.js" },
+  "files": ["dist", "README.md", "LICENSE", "examples/contextpack.example.json"],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "tsx --test test/*.test.ts",
+    "check": "tsc --noEmit -p tsconfig.json",
+    "prepack": "npm run build"
+  },
+  "dependencies": {
+    "repomix": "1.19.0",
+    "@secretlint/core": "13.1.0",
+    "@secretlint/secretlint-rule-preset-recommend": "13.1.0",
+    "ignore": "7.0.14",
+    "picomatch": "4.0.7"
+  },
+  "devDependencies": {
+    "typescript": "7.0.2",
+    "tsx": "4.23.15",
+    "@types/node": "26.6.6",
+    "@types/picomatch": "4.0.3"
+  }
+}
