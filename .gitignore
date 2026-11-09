@@ -4,3 +4,7 @@ dist/
 .superpowers/
 coverage/
 *.tgz
+.contextpack/
+.contextpack-tmp-*/
+.contextpack-backup-*/
+.contextpack-lock-*/

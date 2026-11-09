@@ -1,0 +1,13 @@
+{
+  "budget": 20000,
+  "maxFileBytes": 524288,
+  "exclude": ["fixtures/large/**"],
+  "profiles": {
+    "auth": {
+      "focus": ["auth", "refresh"],
+      "pin": ["src/auth/**"],
+      "budget": 5000,
+      "instructions": "Explain the failure and propose a minimal fix. Ask for missing files."
+    }
+  }
+}

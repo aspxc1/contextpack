@@ -1,0 +1,150 @@
+{
+  "schemaVersion": 1,
+  "versions": {
+    "contextpack": "1.0.0",
+    "tokenizer": "gpt-tokenizer@4.1.0",
+    "scanner": "@secretlint/core@13.1.0",
+    "rules": "@secretlint/secretlint-rule-preset-recommend@13.1.0",
+    "ignore": "7.0.14",
+    "picomatch": "4.0.7"
+  },
+  "encoding": "o200k_base",
+  "budget": 5000,
+  "configuration": {
+    "include": [],
+    "exclude": [],
+    "pin": [
+      "src/auth/**"
+    ],
+    "focus": [
+      "auth"
+    ],
+    "budget": 5000,
+    "maxFileBytes": 524288,
+    "instructionsHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "task": {
+    "kind": "task-specific",
+    "hash": "0facb45c67c86e2f160127d6884125096ea09dc48acda49501de08394f4f3087"
+  },
+  "profile": null,
+  "repository": {
+    "label": "backend",
+    "git": {
+      "head": "fda9b42135c6ee5688e4998129cd666ed3bd210e",
+      "dirty": true
+    },
+    "capture": "sequential working-tree view; not atomic"
+  },
+  "document": {
+    "hash": "192e57d845b1dbda1fcda466d3f348ecab3eefc1a4d800a079e20210649f6508",
+    "tokens": 1228,
+    "bytes": 4222,
+    "characters": 4220
+  },
+  "files": [
+    {
+      "path": ".gitignore",
+      "status": "included",
+      "reason": "selected by ranking",
+      "bytes": 39,
+      "characters": 39,
+      "hash": "d46760bfe0a09a3b3f6d1e79eef641c4f26e83852e98487563fd339795aba6c9",
+      "tokens": 10,
+      "score": 0,
+      "reasons": [
+        "other eligible file"
+      ]
+    },
+    {
+      "path": "README.md",
+      "status": "included",
+      "reason": "selected by ranking",
+      "bytes": 201,
+      "characters": 201,
+      "hash": "04776e35a3276087e1066603eb05737fe9fbe10d9106e88897e2492770980a04",
+      "tokens": 34,
+      "score": 60,
+      "reasons": [
+        "task text match",
+        "project readme"
+      ]
+    },
+    {
+      "path": "package.json",
+      "status": "included",
+      "reason": "selected by ranking",
+      "bytes": 169,
+      "characters": 169,
+      "hash": "94e6afca81158e57b779617363bd0630b2a5674216a963a9d1bab6af7843eb9a",
+      "tokens": 57,
+      "score": 60,
+      "reasons": [
+        "project manifest"
+      ]
+    },
+    {
+      "path": "src/auth/refresh.ts",
+      "status": "included",
+      "reason": "selected by ranking",
+      "bytes": 330,
+      "characters": 330,
+      "hash": "01bacda77ee88e553f5b63cc4aeff3763de2b99f28110f9ce81eadc03594e799",
+      "tokens": 85,
+      "score": 10125,
+      "reasons": [
+        "pinned",
+        "focus path match",
+        "task path match",
+        "task text match",
+        "source file"
+      ]
+    },
+    {
+      "path": "src/billing/invoice.ts",
+      "status": "included",
+      "reason": "selected by ranking",
+      "bytes": 119,
+      "characters": 119,
+      "hash": "5d0809e401dea294909a9638878c666e558391a34ac802b832113c72631d83a3",
+      "tokens": 29,
+      "score": 5,
+      "reasons": [
+        "source file"
+      ]
+    },
+    {
+      "path": "src/server.ts",
+      "status": "included",
+      "reason": "selected by ranking",
+      "bytes": 105,
+      "characters": 105,
+      "hash": "97462b838acc0a394a983c5a0834e6f877a3611f6b7e8be3b555cefed30c536c",
+      "tokens": 24,
+      "score": 95,
+      "reasons": [
+        "focus text match",
+        "task text match",
+        "declared entrypoint",
+        "source file"
+      ]
+    },
+    {
+      "path": "test/refresh.test.ts",
+      "status": "included",
+      "reason": "selected by ranking",
+      "bytes": 278,
+      "characters": 278,
+      "hash": "3424a8d28f41d40e62afc99ab743bf0f67b9e7b008854a52d518594746b87a08",
+      "tokens": 72,
+      "score": 100,
+      "reasons": [
+        "focus text match",
+        "task path match",
+        "task text match",
+        "source file",
+        "related test or schema"
+      ]
+    }
+  ]
+}
