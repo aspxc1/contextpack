@@ -14,7 +14,7 @@
     "prepack": "npm run build"
   },
   "dependencies": {
-    "repomix": "1.19.0",
+    "gpt-tokenizer": "4.1.0",
     "@secretlint/core": "13.1.0",
     "@secretlint/secretlint-rule-preset-recommend": "13.1.0",
     "ignore": "7.0.14",
